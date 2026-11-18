@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>MsgGuard PRO — App Android Xem Tin Nhắn Đã Gỡ Trên Messenger</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- MÀN HÌNH KHÓA MÃ PIN BẢO MẬT (NÂNG CẤP 4) -->
+  <div class="pin-lock-overlay hidden" id="pin-lock-overlay">
+    <div class="pin-card">
+      <div class="pin-icon">🔐</div>
+      <h3>Khóa Bảo Mật MsgGuard</h3>
+      <p id="pin-prompt-text">Nhập mã PIN 4 số để xem tin nhắn đã gỡ</p>
+      <div class="pin-dots" id="pin-dots">
+        <span></span><span></span><span></span><span></span>
+      </div>
+      <div class="pin-keypad">
+        <button class="pin-key" data-digit="1">1</button>
+        <button class="pin-key" data-digit="2">2</button>
+        <button class="pin-key" data-digit="3">3</button>
+        <button class="pin-key" data-digit="4">4</button>
+        <button class="pin-key" data-digit="5">5</button>
+        <button class="pin-key" data-digit="6">6</button>
+        <button class="pin-key" data-digit="7">7</button>
+        <button class="pin-key" data-digit="8">8</button>
+        <button class="pin-key" data-digit="9">9</button>
+        <button class="pin-key clear" id="pin-key-clear">Xóa</button>
+        <button class="pin-key" data-digit="0">0</button>
+        <button class="pin-key back" id="pin-key-back">⌫</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- THANH HEADER TRÊN PC SIMULATOR & DASHBOARD -->
+  <header class="pc-topbar" id="pc-topbar">
+    <div class="brand">
+      <div class="brand-logo">🛡️</div>
+      <div>
+        <h1>MsgGuard PRO <span class="badge-tag">v4.0 ULTIMATE • Chống Tràn Ảnh &amp; Bắt Tin Sửa</span></h1>
+        <p class="subtitle">Bắt Tin Gỡ &amp; Chỉnh Sửa (Edit) • Lưu Ảnh Ngoài SQLite (Không Giới Hạn 2MB) • Foreground 24/7 • Khóa PIN</p>
+      </div>
+    </div>
+
+    <div class="quick-scenarios">
+      <span class="scenario-label">🎬 Chạy thử kịch bản:</span>
+      <button class="btn-scenario" id="btn-scen-crush">
+        💕 Crush tỏ tình rồi gỡ (2s)
+      </button>
+      <button class="btn-scenario" id="btn-scen-photo">
+        📸 Gửi ảnh rồi thu hồi ngầm
+      </button>
+      <button class="btn-scenario" id="btn-scen-boss">
+        💼 Sếp nhắn nhầm rồi gỡ
+      </button>
+    </div>
+
+    <div class="top-stats">
+      <a href="/MsgGuard-Pro.apk?v=4.0" download="MsgGuard-Pro-v4.0.apk" class="stat-pill" style="background:linear-gradient(135deg,#10b981,#059669);border-color:#34d399;color:#fff;text-decoration:none;font-weight:700;">
+        📲 Tải Bản Nâng Cấp PRO v4.0 (.APK)
+      </a>
+      <div class="stat-pill">
+        <span>Đã bắt:</span>
+        <strong id="pc-stat-total">0</strong>
+      </div>
+      <div class="stat-pill danger">
+        <span>🔥 Bị gỡ:</span>
+        <strong id="pc-stat-unsent">0</strong>
+      </div>
+    </div>
+  </header>
+
+  <main class="workspace-grid">
+    <!-- CỘT TRÁI: MÀN HÌNH ĐIỆN THOẠI ANDROID CHẠY APP MSGGUARD PRO -->
+    <section class="phone-showcase">
+      <div class="phone-frame">
+        <div class="android-statusbar">
+          <span class="status-time" id="android-clock">09:30</span>
+          <div class="camera-punch"></div>
+          <div class="status-icons">
+            <span>5G</span>
+            <span>📶</span>
+            <span>🔋 96%</span>
+          </div>
+        </div>
+
+        <div class="android-headsup hidden" id="android-headsup">
+          <div class="headsup-icon" id="headsup-icon">💬</div>
+          <div class="headsup-body">
+            <div class="headsup-app" id="headsup-app">Messenger • bây giờ</div>
+            <div class="headsup-title" id="headsup-title">Người gửi</div>
+            <div class="headsup-text" id="headsup-text">Nội dung thông báo...</div>
+          </div>
+        </div>
+
+        <div class="msgguard-app">
+          <div class="app-header">
+            <div class="app-title-row">
+              <div class="app-brand">
+                <span class="shield-icon">🛡️</span>
+                <div>
+                  <h2>MsgGuard <span style="font-size:10px;background:#2563eb;color:#fff;padding:1px 6px;border-radius:99px;vertical-align:middle;">PRO</span></h2>
+                  <span class="service-status" id="service-status-badge">
+                    <span class="pulse-dot"></span> Bảo vệ 24/7 (0% Pin • Offline)
+                  </span>
+                </div>
+              </div>
+              <div class="app-actions">
+                <button class="icon-btn" id="btn-lock-now" title="Khóa màn hình PIN ngay">🔒</button>
+                <button class="icon-btn" id="btn-export-json" title="Xuất file JSON">⬇️</button>
+                <button class="icon-btn" id="btn-clear-all" title="Xóa toàn bộ lịch sử">🗑️</button>
+              </div>
+            </div>
+
+            <div class="perm-banner granted" id="perm-banner">
+              <div class="perm-info">
+                <span id="perm-icon">✅</span>
+                <div>
+                  <strong id="perm-title">Quyền Đọc Thông Báo: ĐÃ BẬT</strong>
+                  <small id="perm-desc">Bắt chuỗi tin nhắn + ảnh/sticker trước khi gỡ</small>
+                </div>
+              </div>
+              <div style="display:flex;gap:6px;align-items:center;">
+                <button class="btn-xs" id="btn-rebind-listener" title="Làm mới kết nối bắt thông báo ngầm">🔄 Kết nối lại</button>
+                <button class="btn-xs" id="btn-open-perm">Cài đặt</button>
+              </div>
+            </div>
+
+            <div class="app-filter-chips" id="app-filter-chips">
+              <button class="chip active" data-pkg="ALL">Tất cả</button>
+              <button class="chip" data-pkg="STARRED_VIP">⭐ VIP / Đã Ghim</button>
+              <button class="chip" data-pkg="com.facebook.orca">💙 Messenger</button>
+              <button class="chip" data-pkg="com.zing.zalo">🟦 Zalo</button>
+              <button class="chip" data-pkg="com.instagram.android">🟣 Instagram</button>
+            </div>
+
+            <div class="search-box">
+              <span>🔍</span>
+              <input type="text" id="search-input" placeholder="Tìm tên người gửi, nhóm hoặc nội dung đã gỡ..." />
+            </div>
+          </div>
+
+          <div class="app-content" id="app-content">
+            <div id="message-list-view" class="message-list"></div>
+
+            <div id="conversation-view" class="conversation-view hidden">
+              <div id="conv-list" class="conv-list"></div>
+              <div id="conv-detail" class="conv-detail hidden">
+                <div class="conv-detail-header">
+                  <button class="btn-back" id="btn-back-conv">← Quay lại</button>
+                  <div class="conv-detail-title" id="conv-detail-title">Tên cuộc trò chuyện</div>
+                </div>
+                <div class="chat-bubbles" id="chat-bubbles"></div>
+              </div>
+            </div>
+
+            <!-- TAB BẢNG XẾP HẠNG THÁNH GỠ TIN (v3.0) -->
+            <div id="leaderboard-view" class="leaderboard-view hidden">
+              <div class="setting-card" style="margin-bottom:10px;background:linear-gradient(135deg,#1e1b4b,#0f172a);border-color:rgba(99,102,241,0.4);">
+                <h4>🏆 Bảng Xếp Hạng "Thánh Gỡ Tin Nhắn"</h4>
+                <p style="margin-bottom:0;">Thống kê những người hay thu hồi tin nhắn nhất với bạn (bấm vào tên để xem toàn bộ tin người đó đã gỡ).</p>
+              </div>
+              <div id="leaderboard-list" class="conv-list"></div>
+            </div>
+
+            <!-- TAB CẤU HÌNH ULTIMATE v3.0 -->
+            <div id="settings-view" class="settings-view hidden">
+              <div class="setting-card">
+                <h4>👑 Danh sách "Đặc Biệt Chú Ý" (VIP Watchlist)</h4>
+                <p>Nhập tên người quan trọng (cách nhau bởi dấu phẩy). Khi họ nhắn hoặc gỡ tin, app tự động gắn nhãn <strong>👑 VIP</strong> và bảo vệ vĩnh viễn.</p>
+                <input type="text" id="input-vip-watchlist" class="text-input" placeholder="VD: Minh Anh, Crush, Sếp, Người yêu..." />
+              </div>
+
+              <div class="setting-card">
+                <h4>🧹 Dọn Nhẹ Bộ Nhớ Thông Minh (Auto-Clean)</h4>
+                <p>Xóa các tin nhắn bình thường cho nhẹ máy nhưng <strong>GIỮ VĨNH VIỄN 100% tin bị gỡ (🔥) và tin gắn Sao/VIP (⭐)</strong>.</p>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                  <button class="btn-secondary" id="btn-smart-clean-7d">🧹 Dọn tin thường &gt; 7 ngày</button>
+                  <button class="btn-secondary" id="btn-smart-clean-all">✨ Chỉ giữ lại Tin Gỡ &amp; ⭐</button>
+                </div>
+              </div>
+
+              <div class="setting-card">
+                <h4>🛡️ Chế độ "Bất Tử" Chống Tắt Ngầm 24/7</h4>
+                <p>Duy trì thanh trạng thái tĩnh siêu nhẹ (0% CPU, không chuông) để hệ điều hành Xiaomi / Samsung không bao giờ tự đóng dịch vụ khi khóa màn hình qua đêm.</p>
+                <label class="switch-row" style="margin-bottom:8px;">
+                  <span>Giữ dịch vụ sống 24/7 (Keep-Alive)</span>
+                  <input type="checkbox" id="chk-keep-alive" checked />
+                </label>
+                <label class="switch-row">
+                  <span>Bắn thông báo khi có người gỡ tin</span>
+                  <input type="checkbox" id="chk-notify-unsend" checked />
+                </label>
+              </div>
+
+              <div class="setting-card">
+                <h4>⚡ Cài đặt Tự Khởi Chạy &amp; Pin trên Xiaomi</h4>
+                <p>Bấm để mở thẳng trang Quản lý Ứng dụng của MsgGuard (bật <strong>Tự khởi chạy</strong> và <strong>Cho phép cài đặt bị hạn chế</strong>).</p>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                  <button class="btn-primary" id="btn-open-app-info">⚙️ Thông tin App</button>
+                  <button class="btn-secondary" id="btn-battery-opt">🔋 Mở cài đặt Pin</button>
+                </div>
+              </div>
+
+              <div class="setting-card">
+                <h4>🔐 Khóa Mã PIN 4 Số Bảo Mật</h4>
+                <p>Ngăn người khác mượn điện thoại mở MsgGuard đọc trộm tin nhắn của bạn (Để trống nếu muốn tắt khóa PIN).</p>
+                <input type="password" id="input-pin-code" maxlength="4" inputmode="numeric" class="text-input" placeholder="Nhập 4 chữ số (VD: 1234) hoặc để trống..." />
+                <button class="btn-primary btn-full" id="btn-save-settings" style="margin-top:10px;">💾 Lưu toàn bộ cấu hình v3.0</button>
+              </div>
+            </div>
+          </div>
+
+          <nav class="app-bottom-nav" style="grid-template-columns:repeat(5, 1fr);">
+            <button class="nav-item active" data-view="unsent">
+              <span class="nav-label-top">🔥</span>
+              <span class="nav-label">Tin Gỡ</span>
+              <span class="nav-badge" id="badge-unsent-count">0</span>
+            </button>
+            <button class="nav-item" data-view="all">
+              <span class="nav-label-top">💬</span>
+              <span class="nav-label">Tất Cả</span>
+              <span class="nav-badge secondary" id="badge-all-count">0</span>
+            </button>
+            <button class="nav-item" data-view="conversations">
+              <span class="nav-label-top">👥</span>
+              <span class="nav-label">Hội Thoại</span>
+            </button>
+            <button class="nav-item" data-view="leaderboard">
+              <span class="nav-label-top">📊</span>
+              <span class="nav-label">Thánh Gỡ</span>
+            </button>
+            <button class="nav-item" data-view="settings">
+              <span class="nav-label-top">⚙️</span>
+              <span class="nav-label">Cấu Hình</span>
+            </button>
+          </nav>
+
+          <div class="android-navbar">
+            <div class="gesture-pill"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CỘT PHẢI: BẢNG ĐIỀU KHIỂN GIẢ LẬP ĐỐI PHƯƠNG & MÃ NGUỒN -->
+    <section class="control-panel" id="pc-control-panel">
+      <div class="panel-tabs">
+        <button class="panel-tab active" data-ptab="simulator">
+          🧪 Bộ Giả Lập Đối Phương Gửi &amp; Gỡ Tin Nhắn
+        </button>
+        <button class="panel-tab" data-ptab="source">
+          📦 Mã Nguồn PRO &amp; Tải Bản Cập Nhật .APK
+        </button>
+      </div>
+
+      <div class="panel-body" id="ptab-simulator">
+        <div class="sim-card">
+          <div class="sim-card-header">
+            <h3>📱 Giả lập Điện thoại Đối phương (Sender)</h3>
+            <span class="sim-tag">Đã nâng cấp: Bắt chuỗi tin + Ảnh URI + Avatar + Khóa PIN</span>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Ứng dụng nhắn tin (`sbn.packageName`)</label>
+              <select id="sim-pkg" class="form-control">
+                <option value="com.facebook.orca">💙 Facebook Messenger (com.facebook.orca)</option>
+                <option value="com.zing.zalo">🟦 Zalo (com.zing.zalo)</option>
+                <option value="com.instagram.android">🟣 Instagram Direct (com.instagram.android)</option>
+                <option value="org.telegram.messenger">✈️ Telegram (org.telegram.messenger)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Tên người gửi / Nhóm (`EXTRA_TITLE`)</label>
+              <input type="text" id="sim-sender" class="form-control" value="Trần Minh Anh 💕" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Nội dung tin nhắn (`EXTRA_TEXT` / `EXTRA_MESSAGES`)</label>
+            <textarea id="sim-content" class="form-control" rows="2">Anh ơi em lỡ làm rơi mất chìa khóa xe rồi, đừng mắng em nha 😭</textarea>
+          </div>
+
+          <div class="form-options">
+            <label class="checkbox-label">
+              <input type="checkbox" id="sim-has-photo" />
+              <span>📸 Đính kèm Hình ảnh / Sticker (`EXTRA_PICTURE` &amp; `MessagingStyle URI`)</span>
+            </label>
+          </div>
+
+          <div class="sim-action-buttons" style="grid-template-columns:repeat(2, 1fr);">
+            <button class="btn-sim-send" id="btn-sim-send">
+              📨 1. Gửi Tin Nhắn Tới Điện Thoại
+            </button>
+            <button class="btn-sim-unsend" id="btn-sim-unsend-text">
+              🗑️ 2. Đối Phương Bấm "Thu Hồi" (Layer 1)
+            </button>
+            <button class="btn-sim-cancel" id="btn-sim-unsend-cancel">
+              👻 3. Thu Hồi Ngầm (Layer 2: App Cancel)
+            </button>
+            <button class="btn-sim-cancel" id="btn-sim-edit" style="background:linear-gradient(135deg,#d97706,#b45309);border-color:#fbbf24;">
+              ✏️ 4. Đối Phương "Sửa Tin Nhắn" (Edit v4.0)
+            </button>
+          </div>
+        </div>
+
+        <div class="sbn-log-card">
+          <div class="sbn-log-header">
+            <h4>📡 Nhật ký `StatusBarNotification` (Android System Hook)</h4>
+            <button class="btn-xs" id="btn-reset-seed">🔄 Khôi phục dữ liệu mẫu</button>
+          </div>
+          <div class="sbn-log-list" id="sbn-log-list"></div>
+        </div>
+      </div>
+
+      <div class="panel-body hidden" id="ptab-source">
+        <div class="guide-banner">
+          <h3>🚀 Bản nâng cấp MsgGuard PRO v2.0 đã sẵn sàng!</h3>
+          <p style="font-size:13px;color:#cbd5e1;line-height:1.5;">
+            Được ký cùng chứng chỉ số với bản bạn vừa cài trên máy, nên bạn chỉ cần tải <strong><code>http://192.168.1.3:3456/MsgGuard-Pro.apk</code></strong> và bấm <strong>"Cập nhật" (Update)</strong> đè lên là xong — <strong>không cần cấp lại quyền bị hạn chế!</strong>
+          </p>
+        </div>
+
+        <div class="code-viewer-card">
+          <div class="code-file-tabs" id="code-file-tabs">
+            <button class="cfile-btn active" data-file="MessengerNotificationService.java">MessengerNotificationService.java</button>
+            <button class="cfile-btn" data-file="MessageDatabase.java">MessageDatabase.java</button>
+            <button class="cfile-btn" data-file="MainActivity.java">MainActivity.java</button>
+            <button class="cfile-btn" data-file="AndroidManifest.xml">AndroidManifest.xml</button>
+            <button class="cfile-btn" data-file="build-apk.ps1">build-apk.ps1</button>
+          </div>
+          <div class="code-toolbar">
+            <span id="current-code-filename">MessengerNotificationService.java</span>
+            <button class="btn-xs" id="btn-copy-code">📋 Copy mã nguồn</button>
+          </div>
+          <pre class="code-block"><code id="code-content">Đang tải mã nguồn...</code></pre>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

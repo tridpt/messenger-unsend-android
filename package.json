@@ -1,0 +1,9 @@
+{
+  "name": "msgguard-messenger-unsend-android",
+  "version": "1.0.0",
+  "description": "Ứng dụng Android bắt tin nhắn đã gỡ trên Messenger (NotificationListenerService) kèm Giả lập Android & Server đồng bộ PC",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  }
+}
